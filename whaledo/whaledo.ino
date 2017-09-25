@@ -23,17 +23,16 @@ int leftMotorPort = 2;
 
 //Arduino PWM Speed Control
 int rightMotor = 5;  
-int M1 = 4; 
+int rightDir = 4; //right motor direction
 int leftMotor = 6;                      
-int M2 = 7; 
+int leftDir = 7; //left motor direction
 
 //Assign SharpIR sensors
 SharpIR rightSensor(GP2YA41SK0F, rightIrPin);
 SharpIR leftSensor(GP2YA41SK0F, leftIrPin);
 
 //Battery Voltage Tracker
-int measurementArray[10]={5,5,5,5,5,5,5,5,5,5}; //junk data
-int voltage = 5; //voltage
+int batteryVoltage;
 
 ////Assign Motors
 //AF_DCMotor rightMotor(rightMotorPort);
@@ -48,10 +47,10 @@ void setup() {
   pinMode(rightIrPin, INPUT);
   pinMode(leftIrPin, INPUT);
   pinMode(batteryPin, INPUT);
-  pinMode(M1, OUTPUT);   
-  pinMode(M2, OUTPUT); 
-  digitalWrite(M1,LOW);   
-  digitalWrite(M2, LOW);  
+  pinMode(rightDir, OUTPUT);   
+  pinMode(leftDir, OUTPUT); 
+  digitalWrite(rightDir,LOW);  //pumps only drive one way 
+  digitalWrite(leftDir, LOW); //pumps only drive one way 
   Serial.begin(9600); //Enable the serial comunication
 }
 
@@ -62,11 +61,7 @@ void loop() {
   */
   int rightDistance = rightSensor.getDistance(); //Calculate the distance in centimeters
   int leftDistance = leftSensor.getDistance(); //Calculate the distance in centimeters
-  Serial.print("Left: ");
-  Serial.print(leftDistance);
-  Serial.print(", Right: ");
-  Serial.print(rightDistance);
-  Serial.print("\n");
+  printIrValues(leftDistance, rightDistance);
   //Check battery voltage (TODO)
   
   
@@ -76,21 +71,15 @@ void loop() {
   */
   if (rightDistance <= MINDISTANCE or leftDistance <= MINDISTANCE) {
     if (rightDistance-leftDistance < 0) {
-//      rightMotor.setSpeed(255);
-//      leftMotor.setSpeed(0);
         analogWrite(rightMotor, 255);
         analogWrite(leftMotor, 0);
     }
     if (rightDistance-leftDistance >= 0){
-//      rightMotor.setSpeed(0);
-//      leftMotor.setSpeed(255);
         analogWrite(rightMotor, 0);
         analogWrite(leftMotor, 255);
     }
   }
   else {
-//    rightMotor.setSpeed(255);
-//    leftMotor.setSpeed(255);
       analogWrite(rightMotor, 255);
       analogWrite(leftMotor, 255);
   }
@@ -126,14 +115,29 @@ int checkBattery(){
   static int index = 0;
   int voltage = 0;
 
-  meassurementArray[index] = analogRead(A2); //replace oldest voltage sample
+  measurementArray[index] = analogRead(A2); //replace oldest voltage sample
   index = (index+1)%10; //make sure index is within size of the array
 
   for (int i=0; i<10; i++){
-    voltage += meassurementArray[i] //sum up voltages
+    voltage += measurementArray[i]; //sum up voltages
   }
   voltage = voltage/10; //divide by number of samples
   return voltage;
+}
+
+/*
+ * Function: printIrValues 
+ *  Input: 
+ *    - int leftDistance: reading from left IR sensor
+ *    - int rightDistance: reading from right IR sensor
+ *  Prints the IR sensor readings on 1 line, in human readable format
+ */
+void printIrValues(int leftDistance, int rightDistance){
+  Serial.print("Left: ");
+  Serial.print(leftDistance);
+  Serial.print(", Right: ");
+  Serial.print(rightDistance);
+  Serial.print("\n");
 }
 
 
