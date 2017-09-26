@@ -7,8 +7,6 @@
 **/
 //import libraries
 #include <SharpIR.h>
-#include <AFMotor.h>
-#include <math.h>
 
 /* Set up Global variables
 */
@@ -33,6 +31,7 @@ SharpIR leftSensor(GP2YA41SK0F, leftIrPin);
 
 //Battery Voltage Tracker
 int batteryVoltage;
+int blinkPeriod = 200; //Blink light every {x} miliseconds
 
 ////Assign Motors
 //AF_DCMotor rightMotor(rightMotorPort);
@@ -43,12 +42,14 @@ int MINDISTANCE = 20;
 
 
 void setup() {
+  //Set pins to input/output
   pinMode(ledPin, OUTPUT); //Allow output to pin with LED
   pinMode(rightIrPin, INPUT);
   pinMode(leftIrPin, INPUT);
   pinMode(batteryPin, INPUT);
   pinMode(rightDir, OUTPUT);   
   pinMode(leftDir, OUTPUT); 
+  
   digitalWrite(rightDir,LOW);  //pumps only drive one way 
   digitalWrite(leftDir, LOW); //pumps only drive one way 
   Serial.begin(9600); //Enable the serial comunication
@@ -62,11 +63,10 @@ void loop() {
   int rightDistance = rightSensor.getDistance(); //Calculate the distance in centimeters
   int leftDistance = leftSensor.getDistance(); //Calculate the distance in centimeters
   printIrValues(leftDistance, rightDistance);
-  //Check battery voltage (TODO)
+  batteryVoltage = checkBattery();
   
   
   /* Think:
-  *  Switch LED State
   *  Decide which motors are on
   */
   if (rightDistance <= MINDISTANCE or leftDistance <= MINDISTANCE) {
@@ -83,12 +83,13 @@ void loop() {
       analogWrite(rightMotor, 255);
       analogWrite(leftMotor, 255);
   }
-  //Check battery voltage (TODO)
+  //set blinking light speed proportional to light
+  //Todo
    
-  /* Act:
-  *  Set outputs
+  /* Act:  
+  *  Set LED
   */
-  blinkSet(200); //blink every 200 millis
+  blinkSet(blinkPeriod); //blink every 200 millis
 }
 
 /* Function: blinkSet
