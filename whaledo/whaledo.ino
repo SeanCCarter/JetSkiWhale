@@ -33,13 +33,8 @@ SharpIR leftSensor(GP2YA41SK0F, leftIrPin);
 int batteryVoltage;
 int blinkPeriod = 200; //Blink light every {x} miliseconds
 
-////Assign Motors
-//AF_DCMotor rightMotor(rightMotorPort);
-//AF_DCMotor leftMotor(leftMotorPort);
-
 //Assign constants for logic
-int MINDISTANCE = 20;
-
+int MINDISTANCE = 15;
 
 void setup() {
   //Set pins to input/output
@@ -49,7 +44,6 @@ void setup() {
   pinMode(batteryPin, INPUT);
   pinMode(rightDir, OUTPUT);   
   pinMode(leftDir, OUTPUT); 
-  
   digitalWrite(rightDir,LOW);  //pumps only drive one way 
   digitalWrite(leftDir, LOW); //pumps only drive one way 
   Serial.begin(9600); //Enable the serial comunication
@@ -62,29 +56,27 @@ void loop() {
   */
   int rightDistance = rightSensor.getDistance(); //Calculate the distance in centimeters
   int leftDistance = leftSensor.getDistance(); //Calculate the distance in centimeters
-  printIrValues(leftDistance, rightDistance);
-  batteryVoltage = checkBattery();
-  
+  printIrValues(leftDistance, rightDistance); //Print distances to serial
   
   /* Think:
   *  Decide which motors are on
   */
   if (rightDistance <= MINDISTANCE or leftDistance <= MINDISTANCE) {
-    if (rightDistance-leftDistance < 0) {
-        analogWrite(rightMotor, 255);
-        analogWrite(leftMotor, 0);
+    if (rightDistance-leftDistance < 0) { //turn left
+        analogWrite(rightMotor, 255); //right motor on
+        analogWrite(leftMotor, 0); //left off
+        delay(750); //Stops robot from just following pool edge
     }
-    if (rightDistance-leftDistance >= 0){
-        analogWrite(rightMotor, 0);
-        analogWrite(leftMotor, 255);
+    if (rightDistance-leftDistance >= 0){ //turn right
+        analogWrite(rightMotor, 0); //right motor off
+        analogWrite(leftMotor, 255); //left on
+        delay(750); //Stops robot from just following pool edge
     }
   }
-  else {
+  else { //No wall, go straight
       analogWrite(rightMotor, 255);
       analogWrite(leftMotor, 255);
   }
-  //set blinking light speed proportional to light
-  //Todo
    
   /* Act:  
   *  Set LED
@@ -107,6 +99,21 @@ void blinkSet(int period){
 }
 
 /*
+ * Function: printIrValues 
+ *  Input: 
+ *    - int leftDistance: reading from left IR sensor
+ *    - int rightDistance: reading from right IR sensor
+ *  Prints the IR sensor readings on 1 line, in human readable format
+ */
+void printIrValues(int leftDistance, int rightDistance){
+  Serial.print("Left: ");
+  Serial.print(leftDistance);
+  Serial.print(", Right: ");
+  Serial.print(rightDistance);
+  Serial.print("\n");
+}
+
+/*
  * Function: checkBattery 
  *  Relies on: measurementArray global variable
  *  Returns: battery voltage (average of last 10 values)
@@ -126,20 +133,7 @@ int checkBattery(){
   return voltage;
 }
 
-/*
- * Function: printIrValues 
- *  Input: 
- *    - int leftDistance: reading from left IR sensor
- *    - int rightDistance: reading from right IR sensor
- *  Prints the IR sensor readings on 1 line, in human readable format
- */
-void printIrValues(int leftDistance, int rightDistance){
-  Serial.print("Left: ");
-  Serial.print(leftDistance);
-  Serial.print(", Right: ");
-  Serial.print(rightDistance);
-  Serial.print("\n");
-}
+
 
 
 
